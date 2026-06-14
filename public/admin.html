@@ -1,0 +1,504 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Quiz — Admin</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <style>
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    :root{--bg:#0d0d14;--surface:rgba(255,255,255,.05);--border:rgba(255,255,255,.08);--text:#fff;--sub:rgba(255,255,255,.45);--purple:#6c63ff;--cyan:#00d4ff;--green:#00e676;--red:#ff5252;}
+    body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;padding:20px 16px 60px;}
+    .bg{position:fixed;inset:0;z-index:0;background:radial-gradient(ellipse at 10% 30%,rgba(108,99,255,.1) 0%,transparent 50%),radial-gradient(ellipse at 90% 70%,rgba(0,212,255,.07) 0%,transparent 50%);}
+    .app{position:relative;z-index:1;max-width:860px;margin:0 auto;}
+    .screen{display:none}.screen.active{display:block}
+    @keyframes slideUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+    @keyframes pop{0%{transform:scale(.85);opacity:0}70%{transform:scale(1.03)}100%{transform:scale(1);opacity:1}}
+    @keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+    .au{animation:slideUp .35s ease both}.ap{animation:pop .4s cubic-bezier(.175,.885,.32,1.275) both}
+    .d1{animation-delay:.05s}.d2{animation-delay:.1s}
+    .btn{display:inline-flex;align-items:center;gap:6px;padding:10px 20px;border-radius:12px;border:none;font-size:14px;font-weight:700;font-family:inherit;cursor:pointer;transition:all .2s;}
+    .btn:active{transform:scale(.97)}
+    .btn-purple{background:linear-gradient(135deg,#6c63ff,#8b5cf6);color:#fff;}
+    .btn-purple:hover{box-shadow:0 6px 20px rgba(108,99,255,.4);transform:translateY(-1px);}
+    .btn-cyan{background:linear-gradient(135deg,#00d4ff,#0ea5e9);color:#0d0d14;}
+    .btn-cyan:hover{box-shadow:0 6px 20px rgba(0,212,255,.3);transform:translateY(-1px);}
+    .btn-green{background:linear-gradient(135deg,#00e676,#00c853);color:#0d0d14;}
+    .btn-green:hover{box-shadow:0 6px 20px rgba(0,230,118,.3);transform:translateY(-1px);}
+    .btn-red{background:rgba(255,82,82,.15);color:var(--red);border:1px solid rgba(255,82,82,.3);}
+    .btn-red:hover{background:rgba(255,82,82,.25);}
+    .btn-ghost{background:rgba(255,255,255,.06);color:#fff;border:1px solid rgba(255,255,255,.1);}
+    .btn-ghost:hover{background:rgba(255,255,255,.1);}
+    .btn-sm{padding:7px 14px;font-size:13px;}
+    .btn-full{width:100%;justify-content:center;}
+    .input{width:100%;padding:12px 16px;border-radius:12px;border:1.5px solid rgba(255,255,255,.1);background:rgba(255,255,255,.05);color:#fff;font-size:14px;font-family:inherit;transition:border-color .2s;outline:none;}
+    .input:focus{border-color:var(--purple);}
+    .input::placeholder{color:rgba(255,255,255,.25);}
+    label{display:block;font-size:12px;font-weight:700;color:var(--sub);text-transform:uppercase;letter-spacing:.6px;margin:12px 0 6px;}
+    .card{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:20px;padding:20px;margin-bottom:14px;}
+    .tabs{display:flex;gap:4px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:14px;padding:4px;margin-bottom:24px;}
+    .tab{flex:1;padding:9px 8px;border-radius:10px;border:none;background:transparent;color:var(--sub);font-size:13px;font-family:inherit;font-weight:600;cursor:pointer;transition:all .2s;text-align:center;}
+    .tab.active{background:rgba(108,99,255,.25);color:#fff;border:1px solid rgba(108,99,255,.3);}
+    .type-sel{display:flex;gap:8px;margin-top:6px;}
+    .type-btn{flex:1;padding:9px 4px;border-radius:10px;border:1.5px solid rgba(255,255,255,.1);background:rgba(255,255,255,.04);color:var(--sub);font-size:13px;font-family:inherit;font-weight:600;cursor:pointer;text-align:center;transition:all .2s;}
+    .type-btn.active{border-color:var(--purple);background:rgba(108,99,255,.2);color:#fff;}
+    .choices-list{display:flex;flex-direction:column;gap:7px;margin-top:8px;}
+    .choice-row{display:flex;gap:6px;align-items:center;}
+    .choice-row .input{flex:1;}
+    .correct-btn{width:34px;height:34px;border-radius:50%;border:1.5px solid rgba(255,255,255,.15);background:rgba(255,255,255,.06);cursor:pointer;font-size:14px;display:flex;align-items:center;justify-content:center;flex-shrink:0;color:rgba(255,255,255,.4);transition:all .2s;}
+    .correct-btn.ok{background:rgba(0,230,118,.2);border-color:var(--green);color:var(--green);}
+    .vf-sel{display:flex;gap:10px;margin-top:8px;}
+    .vf-btn{flex:1;padding:16px;border-radius:14px;border:1.5px solid rgba(255,255,255,.1);background:rgba(255,255,255,.04);font-size:16px;font-weight:800;font-family:inherit;cursor:pointer;transition:all .2s;text-align:center;color:#fff;}
+    .vf-btn.sel-vrai{border-color:var(--green);background:rgba(0,230,118,.15);color:var(--green);}
+    .vf-btn.sel-faux{border-color:var(--red);background:rgba(255,82,82,.15);color:var(--red);}
+    .badge{display:inline-block;font-size:11px;font-weight:700;padding:3px 9px;border-radius:20px;}
+    .badge-qcm{background:rgba(108,99,255,.25);color:#a5a0ff;}
+    .badge-vf{background:rgba(255,152,0,.2);color:#ffcc80;}
+    .badge-libre{background:rgba(0,230,118,.15);color:#69f0ae;}
+    .lp{display:none}.lp.active{display:block}
+    .code-display{font-size:46px;font-weight:900;letter-spacing:10px;background:linear-gradient(135deg,var(--purple),var(--cyan));-webkit-background-clip:text;-webkit-text-fill-color:transparent;text-align:center;padding:16px 0;}
+    .stat-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px;}
+    .stat{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:16px;padding:16px;text-align:center;}
+    .stat .sn{font-size:44px;font-weight:900;}
+    .stat .sl{font-size:13px;color:var(--sub);margin-top:2px;}
+    .q-live-card{background:rgba(108,99,255,.1);border:1.5px solid rgba(108,99,255,.3);border-radius:20px;padding:22px;margin-bottom:14px;}
+    .q-live-card .qnum{font-size:12px;font-weight:700;color:var(--purple);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px;}
+    .q-live-card .qtxt{font-size:20px;font-weight:800;letter-spacing:-.5px;line-height:1.3;}
+    .q-live-card img{max-width:100%;border-radius:12px;margin-top:12px;max-height:200px;object-fit:contain;}
+    .bar-row{display:flex;align-items:center;gap:10px;margin-bottom:8px;}
+    .bar-label{font-size:13px;font-weight:600;min-width:90px;max-width:130px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:rgba(255,255,255,.7);}
+    .bar-bg{flex:1;height:30px;background:rgba(255,255,255,.06);border-radius:8px;overflow:hidden;}
+    .bar-fill{height:100%;border-radius:8px;display:flex;align-items:center;padding:0 10px;font-size:12px;font-weight:700;color:#fff;transition:width .7s cubic-bezier(.4,0,.2,1);min-width:0;}
+    .bar-fill.ok{background:linear-gradient(90deg,#00c853,#00e676);}
+    .bar-fill.ko{background:linear-gradient(90deg,#d32f2f,#ff5252);}
+    .bar-fill.neutral{background:linear-gradient(90deg,var(--purple),var(--cyan));}
+    .p-chip{display:inline-flex;align-items:center;gap:6px;padding:5px 12px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);border-radius:30px;font-size:13px;font-weight:600;margin:3px;animation:pop .3s ease both;}
+    .av-sm{width:24px;height:24px;border-radius:50%;background:rgba(108,99,255,.3);display:flex;align-items:center;justify-content:center;font-size:12px;overflow:hidden;flex-shrink:0;}
+    .av-sm img{width:100%;height:100%;object-fit:cover;}
+    .podium-row{display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid rgba(255,255,255,.06);}
+    .podium-row:last-child{border:none}
+    .av-md{width:40px;height:40px;border-radius:50%;background:rgba(108,99,255,.2);display:flex;align-items:center;justify-content:center;font-size:18px;overflow:hidden;flex-shrink:0;}
+    .av-md img{width:100%;height:100%;object-fit:cover;}
+    .divider{height:1px;background:rgba(255,255,255,.06);margin:14px 0;}
+    .err{color:var(--red);font-size:13px;font-weight:500;min-height:18px;margin-top:6px;}
+    .row{display:flex;gap:8px;align-items:center;flex-wrap:wrap;}
+    .section-title{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--sub);margin-bottom:10px;}
+    @media(max-width:500px){.stat-grid{grid-template-columns:1fr}.stat .sn{font-size:34px}}
+  </style>
+</head>
+<body>
+<div class="bg"></div>
+<div class="app">
+
+<!-- LOGIN -->
+<div id="s-login" class="screen active" style="max-width:420px;margin:60px auto 0;">
+  <div class="card au" style="border-color:rgba(108,99,255,.2);padding:32px;text-align:center;">
+    <div style="font-size:52px;margin-bottom:14px;">⚙️</div>
+    <h1 style="font-size:22px;font-weight:900;letter-spacing:-.5px;margin-bottom:4px;">Espace Admin</h1>
+    <p style="font-size:14px;color:var(--sub);margin-bottom:24px;">Connecte-toi pour gérer le quiz</p>
+    <label style="text-align:left;">Mot de passe admin</label>
+    <input class="input" id="login-pwd" type="password" placeholder="••••••" onkeydown="if(event.key==='Enter')doLogin()">
+    <div class="err" id="login-err"></div>
+    <button class="btn btn-purple btn-full" style="margin-top:16px;" onclick="doLogin()">Se connecter →</button>
+    <a href="/" style="display:block;margin-top:14px;font-size:13px;color:var(--sub);">← Retour à l'accueil</a>
+  </div>
+</div>
+
+<!-- ADMIN -->
+<div id="s-admin" class="screen">
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;flex-wrap:wrap;gap:10px;">
+    <div style="display:flex;align-items:center;gap:10px;">
+      <a href="/" style="font-size:13px;color:var(--sub);text-decoration:none;">← Accueil</a>
+      <h1 style="font-size:20px;font-weight:900;letter-spacing:-.5px;">⚙️ Admin</h1>
+    </div>
+    <div style="display:flex;align-items:center;gap:6px;">
+      <div style="width:8px;height:8px;border-radius:50%;background:var(--green);box-shadow:0 0 8px var(--green);"></div>
+      <span style="font-size:13px;color:var(--sub);">Connecté</span>
+    </div>
+  </div>
+
+  <div class="tabs">
+    <button class="tab active" id="tab-q" onclick="showTab('questions')">📋 Questions</button>
+    <button class="tab" id="tab-l" onclick="showTab('live')">🎮 Live</button>
+    <button class="tab" id="tab-s" onclick="showTab('settings')">🔧 Paramètres</button>
+  </div>
+
+  <!-- TAB QUESTIONS -->
+  <div id="t-questions">
+    <div class="card au">
+      <div class="section-title">Nouvelle question</div>
+      <label>Question</label>
+      <input class="input" id="q-text" placeholder="Ex : C'est quoi le surnom du prof de sport ?">
+      <label>Image (optionnel)</label>
+      <input type="file" id="q-img" accept="image/*" style="font-size:13px;color:var(--sub);" onchange="previewQImg(this)">
+      <img id="q-img-preview" src="" style="display:none;max-height:110px;border-radius:10px;margin-top:8px;object-fit:contain;">
+      <label>Vidéo YouTube (optionnel)</label>
+      <input class="input" id="q-yt" placeholder="Ex : https://youtube.com/watch?v=xxxxx">
+      <div id="q-yt-preview" style="display:none;margin-top:8px;border-radius:12px;overflow:hidden;aspect-ratio:16/9;max-height:180px;">
+        <iframe id="q-yt-frame" width="100%" height="100%" frameborder="0" allowfullscreen style="border-radius:12px;display:block;"></iframe>
+      </div>
+      <button class="btn btn-ghost btn-sm" style="margin-top:6px;" onclick="previewYT()">▶ Prévisualiser</button>
+      <label>Type</label>
+      <div class="type-sel">
+        <button class="type-btn active" id="btn-qcm" onclick="setType('qcm')">☑ QCM</button>
+        <button class="type-btn" id="btn-vf" onclick="setType('vf')">✅ Vrai/Faux</button>
+        <button class="type-btn" id="btn-libre" onclick="setType('libre')">✏️ Libre</button>
+      </div>
+      <div id="sec-qcm">
+        <label>Choix (✓ = bonne réponse)</label>
+        <div class="choices-list" id="choices-list"></div>
+        <button class="btn btn-ghost btn-sm" style="margin-top:8px;" onclick="addChoice()">+ Choix</button>
+      </div>
+      <div id="sec-vf" style="display:none;">
+        <label>Bonne réponse</label>
+        <div class="vf-sel">
+          <button class="vf-btn" id="vf-vrai" onclick="selVF('vrai')">✅ Vrai</button>
+          <button class="vf-btn" id="vf-faux" onclick="selVF('faux')">❌ Faux</button>
+        </div>
+      </div>
+      <div id="sec-libre" style="display:none;">
+        <label>Réponse attendue (optionnel)</label>
+        <input class="input" id="libre-ans" placeholder="Laisse vide si réponse libre">
+      </div>
+      <div class="divider"></div>
+      <div class="row">
+        <button class="btn btn-purple" onclick="addQ()">+ Ajouter</button>
+        <button class="btn btn-cyan" onclick="sendQuestions()">📤 Envoyer au serveur</button>
+        <span id="send-ok" style="font-size:13px;color:var(--green);display:none;">✓ Envoyé !</span>
+      </div>
+    </div>
+    <div class="section-title">Questions (<span id="q-count">0</span>)</div>
+    <div id="q-list"></div>
+    <div id="q-empty" style="text-align:center;padding:28px;color:var(--sub);font-size:14px;">Aucune question encore.</div>
+  </div>
+
+  <!-- TAB LIVE -->
+  <div id="t-live" style="display:none;">
+
+    <div class="lp active" id="lp-attente">
+      <div style="text-align:center;padding:20px 0 28px;">
+        <div style="font-size:52px;margin-bottom:14px;">🎉</div>
+        <h2 style="font-size:24px;font-weight:900;letter-spacing:-.5px;margin-bottom:6px;">En attente des élèves</h2>
+        <p style="color:var(--sub);font-size:14px;">Donne ce code à ta classe :</p>
+        <div class="code-display" id="code-display">QUIZ2025</div>
+        <p style="font-size:14px;color:var(--sub);"><span id="pcount">0</span> élève(s) connecté(s)</p>
+        <div id="chips-wait" style="display:flex;flex-wrap:wrap;gap:6px;justify-content:center;margin-top:14px;"></div>
+        <button class="btn btn-green" style="margin-top:24px;font-size:16px;padding:14px 36px;" onclick="startQuiz()">▶️ Lancer le quiz</button>
+      </div>
+    </div>
+
+    <div class="lp" id="lp-question">
+      <div class="q-live-card au">
+        <div class="qnum" id="lq-num">Question 1/5</div>
+        <div class="qtxt" id="lq-txt"></div>
+        <img id="lq-img" src="" style="display:none;">
+        <div id="lq-yt" style="display:none;margin-top:12px;border-radius:12px;overflow:hidden;aspect-ratio:16/9;max-height:220px;">
+          <iframe id="lq-yt-frame" width="100%" height="100%" frameborder="0" allowfullscreen style="border-radius:12px;display:block;"></iframe>
+        </div>
+        <div id="lq-choices" style="margin-top:10px;"></div>
+      </div>
+      <div class="stat-grid">
+        <div class="stat"><div class="sn" id="ans-n">0</div><div class="sl">ont répondu</div></div>
+        <div class="stat"><div class="sn" id="ans-t">0</div><div class="sl">joueurs</div></div>
+      </div>
+      <div class="row">
+        <button class="btn btn-purple" onclick="showResults()">📊 Afficher les résultats</button>
+      </div>
+    </div>
+
+    <div class="lp" id="lp-resultats">
+      <div class="card au">
+        <div class="section-title" id="res-qtxt"></div>
+        <div id="res-chart" style="margin-top:6px;"></div>
+      </div>
+      <div class="card au d1">
+        <div class="section-title">Réponses des élèves</div>
+        <div id="res-chips"></div>
+      </div>
+      <div class="row" style="margin-top:4px;">
+        <button class="btn btn-green" id="btn-next" onclick="nextQ()">➡️ Question suivante</button>
+        <button class="btn btn-red btn-sm" onclick="resetQuiz()">🔄 Recommencer</button>
+      </div>
+    </div>
+
+    <div class="lp" id="lp-fin">
+      <div class="card" style="text-align:center;padding:32px;">
+        <div style="font-size:60px;margin-bottom:14px;">🏆</div>
+        <h2 style="font-size:26px;font-weight:900;letter-spacing:-.5px;margin-bottom:4px;">Quiz terminé !</h2>
+        <p style="color:var(--sub);font-size:14px;margin-bottom:24px;">Voici le classement final</p>
+        <div id="podium"></div>
+        <button class="btn btn-purple" style="margin-top:20px;" onclick="resetQuiz()">🔄 Nouveau quiz</button>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- TAB SETTINGS -->
+  <div id="t-settings" style="display:none;">
+    <div class="card au">
+      <div class="section-title">Paramètres</div>
+      <label>Nouveau mot de passe admin</label>
+      <input class="input" id="new-pwd" type="password" placeholder="Laisse vide pour ne pas changer">
+      <label>Code élève</label>
+      <input class="input" id="new-code" placeholder="Ex : BREVET2025" style="text-transform:uppercase;letter-spacing:4px;font-weight:800;font-size:18px;">
+      <div class="row" style="margin-top:14px;">
+        <button class="btn btn-purple btn-sm" onclick="saveSettings()">💾 Enregistrer</button>
+        <span id="set-ok" style="font-size:13px;color:var(--green);display:none;">✓ Sauvegardé !</span>
+      </div>
+    </div>
+  </div>
+
+</div>
+</div>
+
+<script src="/socket.io/socket.io.js"></script>
+<script>
+let socket, questions=[], choices=[], qType='qcm', vfAns=null, qImgData=null, ytId=null;
+let totalPlayers=0, currentQIdx=0;
+
+function doLogin(){
+  const pwd=document.getElementById('login-pwd').value;
+  const url=window.location.origin;
+  socket=io(url,{transports:['websocket','polling']});
+  socket.on('connect',()=>{
+    socket.emit('admin:login',{password:pwd},res=>{
+      if(!res.ok)return setErr('login-err','❌ Mot de passe incorrect');
+      questions=res.questions||[];
+      // Charge depuis localStorage si serveur vide
+      if(!questions.length){
+        const saved=localStorage.getItem('quiz_questions');
+        if(saved){try{questions=JSON.parse(saved);}catch(e){}}
+      }
+      totalPlayers=res.playerCount||0;
+      document.getElementById('code-display').textContent=res.quizCode||'QUIZ2025';
+      document.getElementById('new-code').value=res.quizCode||'';
+      document.getElementById('pcount').textContent=totalPlayers;
+      document.getElementById('ans-t').textContent=totalPlayers;
+      renderQList();
+      showScreen('s-admin');
+      showTab('live');
+      if(res.phase==='question'){showLP('lp-question');updateLiveQ(res.currentQ);}
+      else if(res.phase==='resultats'){showLP('lp-resultats');}
+      else if(res.phase==='fin'){showLP('lp-fin');}
+      else showLP('lp-attente');
+      if(res.players) res.players.forEach(p=>addChip('chips-wait',p.name,p.photo,null,null,true));
+      bindSocket();
+    });
+  });
+  socket.on('connect_error',()=>setErr('login-err','❌ Impossible de se connecter au serveur'));
+}
+
+function bindSocket(){
+  socket.on('admin:playerJoined',({name,photo})=>{
+    totalPlayers++;
+    document.getElementById('pcount').textContent=totalPlayers;
+    document.getElementById('ans-t').textContent=totalPlayers;
+    addChip('chips-wait',name,photo,null,null,true);
+  });
+  socket.on('admin:playerCount',n=>{totalPlayers=n;document.getElementById('pcount').textContent=n;document.getElementById('ans-t').textContent=n;});
+  socket.on('admin:answerCount',({answered,total})=>{document.getElementById('ans-n').textContent=answered;document.getElementById('ans-t').textContent=total;});
+  socket.on('quiz:results',data=>renderResults(data));
+  socket.on('quiz:fin',({podium})=>renderPodium(podium));
+  socket.on('admin:settingsOk',({quizCode})=>document.getElementById('code-display').textContent=quizCode);
+  socket.on('quiz:playersUpdate',({players})=>{
+    document.getElementById('chips-wait').innerHTML='';
+    players.forEach(p=>addChip('chips-wait',p.name,p.photo,null,null,true));
+    document.getElementById('pcount').textContent=players.length;
+  });
+}
+
+function showScreen(id){document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));document.getElementById(id).classList.add('active');}
+function showTab(t){['questions','live','settings'].forEach(x=>{document.getElementById('t-'+x).style.display=x===t?'':'none';document.getElementById('tab-'+(x==='questions'?'q':x==='live'?'l':'s')).classList.toggle('active',x===t);});}
+function showLP(id){document.querySelectorAll('.lp').forEach(p=>{p.classList.remove('active');p.style.display='none';});const el=document.getElementById(id);el.classList.add('active');el.style.display='';}
+function setErr(id,msg){document.getElementById(id).textContent=msg;}
+function flash(id){const el=document.getElementById(id);el.style.display='inline';setTimeout(()=>el.style.display='none',2000);}
+
+function startQuiz(){
+  if(!questions.length)return alert('Ajoute des questions d\'abord !');
+  socket.emit('admin:start');
+  currentQIdx=0;
+  document.getElementById('ans-n').textContent='0';
+  document.getElementById('ans-t').textContent=totalPlayers;
+  showLP('lp-question');
+  updateLiveQ(0);
+}
+function showResults(){socket.emit('admin:showResults');showLP('lp-resultats');}
+function nextQ(){
+  socket.emit('admin:next');
+  if(currentQIdx<questions.length-1){currentQIdx++;document.getElementById('ans-n').textContent='0';showLP('lp-question');updateLiveQ(currentQIdx);}
+}
+function resetQuiz(){socket.emit('admin:reset');currentQIdx=0;document.getElementById('chips-wait').innerHTML='';showLP('lp-attente');}
+
+function updateLiveQ(idx){
+  const q=questions[idx];if(!q)return;
+  document.getElementById('lq-num').textContent=`Question ${idx+1} / ${questions.length}`;
+  document.getElementById('lq-txt').textContent=q.text;
+  const img=document.getElementById('lq-img');
+  if(q.image){img.src=q.image;img.style.display='';}else{img.style.display='none';}
+  const ytDiv=document.getElementById('lq-yt');const ytFrame=document.getElementById('lq-yt-frame');
+  if(q.youtube){ytFrame.src=`https://www.youtube.com/embed/${q.youtube}`;ytDiv.style.display='';}else{ytDiv.style.display='none';ytFrame.src='';}
+  const ch=document.getElementById('lq-choices');
+  if(q.type==='qcm') ch.innerHTML=q.choices.map(c=>`<span style="display:inline-block;margin:3px;padding:4px 12px;border-radius:20px;background:rgba(255,255,255,.08);font-size:13px;">${c.text}</span>`).join('');
+  else if(q.type==='vf') ch.innerHTML=`<span style="margin-right:8px;padding:4px 14px;background:rgba(0,230,118,.15);color:var(--green);border-radius:20px;font-size:13px;font-weight:700;">✅ Vrai</span><span style="padding:4px 14px;background:rgba(255,82,82,.15);color:var(--red);border-radius:20px;font-size:13px;font-weight:700;">❌ Faux</span>`;
+  else ch.innerHTML=`<span style="font-size:13px;color:var(--sub);">✏️ Réponse libre</span>`;
+  document.getElementById('res-qtxt').textContent=q.text;
+  document.getElementById('btn-next').textContent=idx<questions.length-1?'➡️ Question suivante':'🏁 Terminer le quiz';
+}
+
+function renderResults({counts,playerList,question}){
+  const chart=document.getElementById('res-chart');chart.innerHTML='';
+  const total=Object.values(counts).reduce((a,b)=>a+b,0)||1;
+  let keys=[];
+  if(question.type==='qcm') keys=question.choices.map(c=>c.text);
+  else if(question.type==='vf') keys=['vrai','faux'];
+  else keys=[...new Set(playerList.map(p=>p.answer).filter(Boolean))];
+  keys.forEach(k=>{
+    const cnt=counts[k]||0,pct=Math.round(cnt/total*100);
+    let cls='neutral';
+    if(question.type==='qcm') cls=question.choices.find(c=>c.text===k)?.correct?'ok':'ko';
+    else if(question.type==='vf') cls=k===question.answer?'ok':'ko';
+    const lbl=question.type==='vf'?(k==='vrai'?'✅ Vrai':'❌ Faux'):k;
+    const row=document.createElement('div');row.className='bar-row';
+    row.innerHTML=`<div class="bar-label">${lbl}</div><div class="bar-bg"><div class="bar-fill ${cls}" style="width:0%" data-pct="${Math.max(pct,4)}"><span>${cnt} (${pct}%)</span></div></div>`;
+    chart.appendChild(row);
+  });
+  requestAnimationFrame(()=>requestAnimationFrame(()=>{chart.querySelectorAll('.bar-fill').forEach(b=>{b.style.width=b.dataset.pct+'%';});}));
+  const chips=document.getElementById('res-chips');chips.innerHTML='';
+  playerList.forEach((p,i)=>{
+    const el=document.createElement('span');el.className='p-chip';
+    el.style.animationDelay=(i*0.05)+'s';
+    el.style.borderColor=p.correct?'rgba(0,230,118,.3)':'rgba(255,82,82,.3)';
+    el.innerHTML=`<div class="av-sm">${p.photo?`<img src="${p.photo}">`:'😊'}</div>${p.name}<button onclick="kickPlayer('${p.name.replace(/'/g,"\\'")}',this.closest('.p-chip'))" style="margin-left:4px;background:none;border:none;cursor:pointer;font-size:13px;color:rgba(255,82,82,.7);padding:0 2px;" title="Exclure">✕</button>`;
+    chips.appendChild(el);
+  });
+}
+
+function renderPodium(podium){
+  showLP('lp-fin');
+  const el=document.getElementById('podium');el.innerHTML='';
+  const medals=['🥇','🥈','🥉'];
+  podium.forEach((p,i)=>{
+    const row=document.createElement('div');row.className='podium-row';
+    row.innerHTML=`<span style="font-size:24px;width:36px;">${medals[i]||i+1+'.'}</span><div class="av-md">${p.photo?`<img src="${p.photo}">`:'😊'}</div><div style="flex:1;font-size:15px;font-weight:700;">${p.name}</div><div style="font-size:16px;font-weight:900;background:linear-gradient(135deg,var(--purple),var(--cyan));-webkit-background-clip:text;-webkit-text-fill-color:transparent;">${p.score}/${p.total}</div>`;
+    el.appendChild(row);
+  });
+}
+
+function addChip(containerId,name,photo,extra,correct,kickable){
+  const el=document.createElement('span');el.className='p-chip';
+  if(correct===true) el.style.borderColor='rgba(0,230,118,.35)';
+  else if(correct===false) el.style.borderColor='rgba(255,82,82,.35)';
+  const kickBtn=kickable?`<button onclick="kickPlayer('${name.replace(/'/g,"\\'")}',this.closest('.p-chip'))" style="margin-left:4px;background:none;border:none;cursor:pointer;font-size:13px;color:rgba(255,82,82,.7);padding:0 2px;" title="Exclure">✕</button>`:'';
+  el.innerHTML=`<div class="av-sm">${photo?`<img src="${photo}">`:'😊'}</div>${name}${extra?' — '+extra:''}${kickBtn}`;
+  document.getElementById(containerId).appendChild(el);
+}
+
+function kickPlayer(name,chipEl){
+  if(!confirm(`Exclure ${name} de la partie ?`))return;
+  socket.emit('admin:kick',{name});
+  chipEl?.remove();
+}
+
+function saveSettings(){
+  const pwd=document.getElementById('new-pwd').value.trim();
+  const code=document.getElementById('new-code').value.trim().toUpperCase();
+  socket.emit('admin:saveSettings',{adminCode:pwd||undefined,quizCode:code||undefined});
+  flash('set-ok');
+}
+
+function getYTId(url){
+  const m=url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([^&\s]+)/);
+  return m?m[1]:null;
+}
+function previewYT(){
+  const url=document.getElementById('q-yt').value.trim();
+  const id=getYTId(url);
+  const preview=document.getElementById('q-yt-preview');
+  const frame=document.getElementById('q-yt-frame');
+  if(id){frame.src=`https://www.youtube.com/embed/${id}`;preview.style.display='';}
+  else alert('Lien YouTube invalide !');
+}
+function previewQImg(input){
+  if(input.files&&input.files[0]){
+    const r=new FileReader();r.onload=e=>{qImgData=e.target.result;const p=document.getElementById('q-img-preview');p.src=qImgData;p.style.display='block';};r.readAsDataURL(input.files[0]);
+  }
+}
+function setType(t){
+  qType=t;vfAns=null;
+  ['qcm','vf','libre'].forEach(x=>document.getElementById('btn-'+x).classList.toggle('active',x===t));
+  document.getElementById('sec-qcm').style.display=t==='qcm'?'':'none';
+  document.getElementById('sec-vf').style.display=t==='vf'?'':'none';
+  document.getElementById('sec-libre').style.display=t==='libre'?'':'none';
+  document.getElementById('vf-vrai').classList.remove('sel-vrai');
+  document.getElementById('vf-faux').classList.remove('sel-faux');
+}
+function selVF(v){vfAns=v;document.getElementById('vf-vrai').classList.toggle('sel-vrai',v==='vrai');document.getElementById('vf-faux').classList.toggle('sel-faux',v==='faux');}
+function addChoice(){choices.push({text:'',correct:false});renderChoices();}
+function renderChoices(){
+  const list=document.getElementById('choices-list');list.innerHTML='';
+  choices.forEach((c,i)=>{
+    const row=document.createElement('div');row.className='choice-row';
+    row.innerHTML=`<input class="input" placeholder="Choix ${i+1}" value="${c.text.replace(/"/g,'&quot;')}" oninput="choices[${i}].text=this.value"><button class="correct-btn ${c.correct?'ok':''}" onclick="toggleC(${i})">✓</button><button class="btn btn-red btn-sm" onclick="rmChoice(${i})">✕</button>`;
+    list.appendChild(row);
+  });
+}
+function toggleC(i){choices[i].correct=!choices[i].correct;renderChoices();}
+function rmChoice(i){choices.splice(i,1);renderChoices();}
+
+function addQ(){
+  const text=document.getElementById('q-text').value.trim();
+  if(!text)return alert('Écris une question !');
+  if(qType==='qcm'){
+    const filled=choices.filter(c=>c.text.trim());
+    if(filled.length<2)return alert('Ajoute au moins 2 choix !');
+    if(!choices.some(c=>c.correct))return alert('Coche la bonne réponse !');
+    ytId=getYTId(document.getElementById('q-yt').value.trim()||'');questions.push({text,type:'qcm',image:qImgData,youtube:ytId||null,choices:filled.map(c=>({...c}))});
+  }else if(qType==='vf'){
+    if(!vfAns)return alert('Sélectionne Vrai ou Faux !');
+    ytId=getYTId(document.getElementById('q-yt').value.trim()||'');questions.push({text,type:'vf',image:qImgData,youtube:ytId||null,answer:vfAns});
+  }else{
+    ytId=getYTId(document.getElementById('q-yt').value.trim()||'');questions.push({text,type:'libre',image:qImgData,youtube:ytId||null,answer:document.getElementById('libre-ans').value.trim()});
+  }
+  document.getElementById('q-text').value='';
+  document.getElementById('libre-ans').value='';
+  document.getElementById('q-img').value='';
+  document.getElementById('q-img-preview').style.display='none';
+  qImgData=null;vfAns=null;ytId=null;document.getElementById('q-yt').value='';document.getElementById('q-yt-preview').style.display='none';document.getElementById('q-yt-frame').src='';
+  document.getElementById('vf-vrai').classList.remove('sel-vrai');
+  document.getElementById('vf-faux').classList.remove('sel-faux');
+  choices=[{text:'',correct:false},{text:'',correct:false}];
+  localStorage.setItem('quiz_questions',JSON.stringify(questions));
+  renderChoices();renderQList();
+}
+
+function rmQ(i){if(confirm('Supprimer ?')){questions.splice(i,1);localStorage.setItem('quiz_questions',JSON.stringify(questions));renderQList();}}
+
+function renderQList(){
+  document.getElementById('q-count').textContent=questions.length;
+  const list=document.getElementById('q-list');
+  document.getElementById('q-empty').style.display=questions.length?'none':'';
+  list.innerHTML='';
+  questions.forEach((q,i)=>{
+    const bc=q.type==='qcm'?'badge-qcm':q.type==='vf'?'badge-vf':'badge-libre';
+    const bl=q.type==='qcm'?'QCM':q.type==='vf'?'Vrai/Faux':'Libre';
+    const d=document.createElement('div');d.className='card au';
+    d.style.display='flex';d.style.justifyContent='space-between';d.style.alignItems='flex-start';d.style.gap='10px';
+    d.innerHTML=`<div style="flex:1;"><div style="display:flex;align-items:center;gap:6px;margin-bottom:4px;"><span class="badge ${bc}">${bl}</span>${q.image?`<span style="font-size:11px;color:var(--sub);">🖼 image</span>`:''} ${q.youtube?`<span style="font-size:11px;color:var(--sub);">▶ vidéo</span>`:''}</div><div style="font-size:15px;font-weight:700;">${q.text}</div></div><button class="btn btn-red btn-sm" onclick="rmQ(${i})">✕</button>`;
+    list.appendChild(d);
+  });
+}
+
+function sendQuestions(){
+  if(!socket)return alert('Connecte-toi d\'abord !');
+  socket.emit('admin:setQuestions',{questions});
+  flash('send-ok');
+}
+
+// Init
+const saved=localStorage.getItem('quiz_questions');
+if(saved){try{questions=JSON.parse(saved);}catch(e){}}
+choices=[{text:'',correct:false},{text:'',correct:false}];
+renderChoices();renderQList();
+</script>
+</body>
+</html>
